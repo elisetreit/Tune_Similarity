@@ -1,0 +1,6 @@
+pandas
+gensim
+seaborn
+nltk
+scikit-learn
+ipykernel
