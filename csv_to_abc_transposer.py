@@ -7,7 +7,7 @@ r"""
                               |_|   |_|              
 Description: Convert CSV file to ABC notation and optionally transpose to a target key
 Assumes the following CSV format:
-etting_id,name,type,meter,mode,date,username,abc
+setting_id,name,type,meter,mode,date,username,abc
 
 Usage: python csv_to_abc_transposer.py [-h] [-o OUTPUT] [-k KEY] csv_file
 Example: python .\csv_to_abc_transposer.py .\raw_data\tunes.csv -o output_dmajor.abc -k Dmajor
