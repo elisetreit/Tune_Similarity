@@ -9,6 +9,7 @@ from pathlib import Path
 from tensorflow.keras import layers, models
 import collections
 import random
+import matplotlib.pyplot as plt
 
 def load_model_from_experiment(experiment_name, vocab_size=None, checkpoint="best"):
     """Load model from experiment directory"""
@@ -381,4 +382,21 @@ def setup_experiment_directories(experiment_name):
         print(f"✓ Created directory: {dir_path}")
     
     return experiment_dir
-experiment_dir = setup_experiment_directories(EXPERIMENT_NAME)
+
+
+def plot_training_val_loss(history):
+    # history is the History object returned by model.fit(...)
+    train_loss = history.history['loss']
+    val_loss   = history.history.get('val_loss', None)
+    epochs     = range(1, len(train_loss) + 1)
+
+    plt.figure(figsize=(8,4))
+    plt.plot(epochs, train_loss,  label='Train Loss')
+    if val_loss is not None:
+        plt.plot(epochs, val_loss,  label='Val Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training & Validation Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
