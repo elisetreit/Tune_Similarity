@@ -1,0 +1,22 @@
+{
+  "experiment_name": "experiment_0",
+  "description": "Baseline model with triplet loss",
+  "model_params": {
+    "emb_dim": 32,
+    "rnn_units": 32,
+    "dropout_rate": 0.1,
+    "l2_reg": 0.001
+  },
+  "training_params": {
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "epochs": 20,
+    "margin": 0.3,
+    "batch_tunes": 16,
+    "per_tune": 2
+  },
+  "data_params": {
+    "min_tune_settings": 2,
+    "max_sequence_length": 512
+  }
+}
