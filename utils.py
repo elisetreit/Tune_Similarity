@@ -11,6 +11,8 @@ import collections
 import random
 import matplotlib.pyplot as plt
 
+# ============================================================================
+
 def load_model_from_experiment(experiment_name, vocab_size=None, checkpoint="best"):
     """Load model from experiment directory"""
     
@@ -74,8 +76,8 @@ def save_model_and_weights(model, experiment_dir, experiment_name):
     
     # Try to save full model (might fail with Lambda layers)
     try:
-        model_path = experiment_dir / "checkpoints" / f"full_model_{timestamp}"
-        model.save(model_path, save_format='tf')
+        model_path = experiment_dir / "checkpoints" / f"full_model_{timestamp}.keras"
+        model.save(model_path)
         print(f"✓ Saved full model to: {model_path}")
     except Exception as e:
         print(f"⚠ Could not save full model: {e}")
@@ -282,6 +284,52 @@ def create_training_dataset_with_validation(train_df, val_df, config):
         print("⚠️  No multi-setting tunes in validation set - skipping validation dataset")
     
     return train_ds, val_ds
+
+def make_balanced_ds(df_split, batch_tunes=16, per_tune=2):
+    # Build index: tune_id → list of (notes, durs)
+    by_id = collections.defaultdict(list)
+    for notes, durs, tid in zip(df_split.note_ids, df_split.dur_seq, df_split.tune_id):
+        by_id[int(tid)].append((notes, durs))
+
+    # Only include tunes with at least `per_tune` settings
+    eligible_tune_ids = [tid for tid, settings in by_id.items() if len(settings) >= per_tune]
+
+    def gen():
+        while True:
+            # Randomly sample `batch_tunes` *unique* tune IDs
+            chosen_tunes = random.sample(eligible_tune_ids, batch_tunes)
+            for tid in chosen_tunes:
+                # Sample `per_tune` *unique* settings for this tune
+                examples = random.sample(by_id[tid], per_tune)
+                for notes, durs in examples:
+                    yield (notes, durs), tid
+
+    ds = tf.data.Dataset.from_generator(
+        gen,
+        output_signature=(
+            (
+                tf.TensorSpec(shape=(None,), dtype=tf.int32),   # notes_list
+                tf.TensorSpec(shape=(None,), dtype=tf.float32)  # durs_list
+            ),
+            tf.TensorSpec(shape=(), dtype=tf.int32)            # label
+        )
+    ).padded_batch(
+        batch_size=batch_tunes * per_tune,
+        padded_shapes=(
+            ([None], [None]),  # notes and durs
+            []                 # label
+        ),
+        padding_values=(
+            (0, 0.0),          # pad notes and durs
+            0                  # pad label
+        )
+    ).prefetch(tf.data.AUTOTUNE)
+
+    return ds
+
+
+
+
 
 # ============================================================================
 # DATA LOADING
